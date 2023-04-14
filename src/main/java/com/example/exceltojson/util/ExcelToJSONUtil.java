@@ -38,9 +38,7 @@ public class ExcelToJSONUtil {
             Custom customSheet = new ExcelToJSONUtil().convertContentTo(sheetName);
             JSONObject sheetObj = new JSONObject();
 
-            if (customSheet.getToName() != null) {
-                sheetObj.put("pCustom", customSheet);
-            }
+            sheetObj.put("_pCustom", customSheet);
 
             XSSFRow row;
             XSSFCell cell;
@@ -75,31 +73,29 @@ public class ExcelToJSONUtil {
                 rows.add(rowObj);
 
             }
+
             sheetObj.put(customSheet.getName(), rows);
             objList.add(sheetObj);
-
-            objMap2.put(customSheet.getName(), sheetObj);
+            objMap2.put(customSheet.getId(), sheetObj);
         }
 
         // 封装JSON
         Iterator<JSONObject> iterator = objList.iterator();
         while (iterator.hasNext()) {
             JSONObject jsonObj = iterator.next();
-            Custom pCustom = jsonObj.getObject("pCustom", Custom.class);
+            Custom pCustom = jsonObj.getObject("_pCustom", Custom.class);
             JSONArray rowsA = jsonObj.getJSONArray(pCustom.getName());
             if (pCustom != null) {
-                JSONObject jsonObjectP = objMap2.get(pCustom.getToName());
+                JSONObject jsonObjectP = objMap2.get(pCustom.getPid());
                 if (jsonObjectP != null) {
                     String toNameAs = pCustom.getName();
-                    if (toNameAs == null || "".equals(toNameAs)) {
-                        toNameAs = "item";
-                    }
+
                     JSONArray rows = jsonObjectP.getJSONArray(pCustom.getToName());
                     if (rows != null) {
                         for (int i = 0; i < rows.size(); i++) {
                             JSONObject jsonObject = rows.getJSONObject(i);
                             if (pCustom.getToRow() != null && !pCustom.getToRow().equals("")) {
-                                if (pCustom.getToRow().equals(String.valueOf(i+2+1))) {
+                                if (pCustom.getToRow().equals(String.valueOf(i + 2 + 1))) {
                                     jsonObject.put(toNameAs, rowsA);
                                 }
                             } else {
@@ -111,17 +107,17 @@ public class ExcelToJSONUtil {
                     iterator.remove();
                 }
             }
-            jsonObj.remove("pCustom");
+            jsonObj.remove("_pCustom");
         }
 
-        return new JSONArray(Collections.singletonList(objList));
+        return JSONArray.parseArray(objList.toString());
 
     }
 
     /**
      * 获取对象内容
-     * */
-    public static Object getCellValue(XSSFCell cell){
+     */
+    public static Object getCellValue(XSSFCell cell) {
         Object value = null;
         switch (cell.getCellType()) {
             case NUMERIC: {
@@ -145,13 +141,13 @@ public class ExcelToJSONUtil {
      */
     private Custom convertContentTo(String content) {
         Custom result = new Custom();
-
-        // #{} to sheet
+        result.setId(content);
+        // {} to sheet
         /**
-         * 匹配规则
-         * ${} 关联数据
+         * 匹配子数据
+         * {} 关联数据
          * */
-        String regex = "#\\{.*}";
+        String regex = "\\{.*}";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(content);
         // Loop through all matches and print the parts of the input string that are not matched
@@ -164,40 +160,65 @@ public class ExcelToJSONUtil {
             int matchEnd = matcher.end();
             nonMatchedString += content.substring(lastMatchEnd, matchStart);
             lastMatchEnd = matchEnd;
+        }else{
+            nonMatchedString += content;
         }
 
         // Print the final part of the input string that is not matched
-        String finalNonMatchedString = nonMatchedString + content.substring(lastMatchEnd);
+        String finalNonMatchedString = nonMatchedString;
+        if (finalNonMatchedString.equals("")) {
+            result.setName("_item");
+        } else {
+            result.setName(finalNonMatchedString);
+        }
 
+        matchedString = matchedString.replaceAll("^\\{", "");
+        matchedString = matchedString.replaceAll("}$", "");
 
-        result.setName(finalNonMatchedString);
-
-        matchedString = matchedString.replace("#{", "");
-        matchedString = matchedString.replace("}", "");
-        String[] matchedStrSplit = matchedString.split("!");
-        if (matchedStrSplit.length == 1) {
-            result.setToName(matchedStrSplit[0]);
-        } else if (matchedStrSplit.length == 2) {
-            result.setToName(matchedStrSplit[0]);
-
-            // 数字
-            String regex3 = "\\d+";
-            Pattern pattern3 = Pattern.compile(regex3);
-            Matcher matcher3 = pattern3.matcher(matchedStrSplit[1]);
-            if (matcher3.find()) {
-                result.setToRow(matcher3.group());
-            }
+        // !number
+        String regex3 = "!\\d$";
+        Pattern pattern3 = Pattern.compile(regex3);
+        Matcher matcher3 = pattern3.matcher(matchedString);
+        if (matcher3.find()) {
+            String matchStr = matcher3.group();
+            result.setToRow(matchStr.replace("!", ""));
+            String pidStr = matchedString.replaceAll(matchStr+"$", "");
+            result.setPid(pidStr);
+            result.setToName(getRegexStrPlus("\\{.*}", pidStr));
+        }else{
+            result.setPid(matchedString);
+            result.setToName(getRegexStrPlus("\\{.*}", matchedString));
         }
         return result;
     }
 
-    ;
+    /**
+     * 获取匹配字符串的剩余字符串
+     * */
+    public static String getRegexStrPlus(String regex, String text){
+        Pattern pattern3 = Pattern.compile(regex);
+        Matcher matcher3 = pattern3.matcher(text);
+        if (matcher3.find()) {
+            String matchStr = matcher3.group();
+            return text.replace(matchStr, "");
+        }else{
+            return text;
+        }
+    }
 
 
     /**
      * 自定义
      */
     public class Custom {
+        /**
+         * id
+         * */
+        private String id = "";
+        /**
+         * pid
+         * */
+        private String pid = "";
         /**
          * sheet名
          * key
@@ -216,6 +237,21 @@ public class ExcelToJSONUtil {
          */
         private String ToName = "";
 
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getPid() {
+            return pid;
+        }
+
+        public void setPid(String pid) {
+            this.pid = pid;
+        }
 
         public String getName() {
             return name;
