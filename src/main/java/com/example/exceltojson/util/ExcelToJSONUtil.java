@@ -52,11 +52,11 @@ public class ExcelToJSONUtil {
                     continue;
                 }
             }
-            Map<String, String> objMap = new HashMap<>();
+            Map<String, Object> objMap = new HashMap<>();
             for (int i1 = 0; i1 <= row.getLastCellNum(); i1++) {
                 cell = row.getCell(i1);
                 if (cell != null) {
-                    objMap.put(String.valueOf(i1), cell.getStringCellValue());
+                    objMap.put(String.valueOf(i1), getCellValue(cell));
                 }
             }
             // get data
@@ -67,19 +67,9 @@ public class ExcelToJSONUtil {
                 for (int i3 = 0; i3 <= row.getLastCellNum(); i3++) {
                     cell = row.getCell(i3);
                     if (cell != null) {
-                        Object value = null;
-                        switch (cell.getCellType()) {
-                            case NUMERIC: {
-                                value = cell.getNumericCellValue();
-                                break;
-                            }
-                            case STRING: {
-                                value = cell.getStringCellValue();
-                                break;
-                            }
-                        }
 
-                        rowObj.put(objMap.get(String.valueOf(i3)), value);
+
+                        rowObj.put(String.valueOf(objMap.get(String.valueOf(i3))), getCellValue(cell));
                     }
                 }
                 rows.add(rowObj);
@@ -126,6 +116,25 @@ public class ExcelToJSONUtil {
 
         return new JSONArray(Collections.singletonList(objList));
 
+    }
+
+    /**
+     * 获取对象内容
+     * */
+    public static Object getCellValue(XSSFCell cell){
+        Object value = null;
+        switch (cell.getCellType()) {
+            case NUMERIC: {
+                value = cell.getNumericCellValue();
+                break;
+            }
+            case STRING: {
+                value = cell.getStringCellValue();
+                break;
+            }
+        }
+
+        return value;
     }
 
 
