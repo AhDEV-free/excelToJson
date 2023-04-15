@@ -88,18 +88,30 @@ public class ExcelToJSONUtil {
             if (pCustom != null) {
                 JSONObject jsonObjectP = objMap2.get(pCustom.getPid());
                 if (jsonObjectP != null) {
-                    String toNameAs = pCustom.getName();
+                    String toNameAs = pCustom.getToName();
 
-                    JSONArray rows = jsonObjectP.getJSONArray(pCustom.getToName());
+                    JSONArray rows = jsonObjectP.getJSONArray(toNameAs);
                     if (rows != null) {
                         for (int i = 0; i < rows.size(); i++) {
                             JSONObject jsonObject = rows.getJSONObject(i);
                             if (pCustom.getToRow() != null && !pCustom.getToRow().equals("")) {
                                 if (pCustom.getToRow().equals(String.valueOf(i + 2 + 1))) {
-                                    jsonObject.put(toNameAs, rowsA);
+                                    // 同名的添加
+                                    if (jsonObject.containsKey(toNameAs)) {
+                                        JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
+                                        jsonArray.addAll(rowsA);
+                                    } else {
+                                        jsonObject.put(toNameAs, rowsA);
+                                    }
                                 }
                             } else {
-                                jsonObject.put(toNameAs, rowsA);
+                                // 同名的添加
+                                if (jsonObject.containsKey(toNameAs)) {
+                                    JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
+                                    jsonArray.addAll(rowsA);
+                                } else {
+                                    jsonObject.put(toNameAs, rowsA);
+                                }
                             }
                         }
                     }
@@ -160,7 +172,7 @@ public class ExcelToJSONUtil {
             int matchEnd = matcher.end();
             nonMatchedString += content.substring(lastMatchEnd, matchStart);
             lastMatchEnd = matchEnd;
-        }else{
+        } else {
             nonMatchedString += content;
         }
 
@@ -182,10 +194,10 @@ public class ExcelToJSONUtil {
         if (matcher3.find()) {
             String matchStr = matcher3.group();
             result.setToRow(matchStr.replace("!", ""));
-            String pidStr = matchedString.replaceAll(matchStr+"$", "");
+            String pidStr = matchedString.replaceAll(matchStr + "$", "");
             result.setPid(pidStr);
             result.setToName(getRegexStrPlus("\\{.*}", pidStr));
-        }else{
+        } else {
             result.setPid(matchedString);
             result.setToName(getRegexStrPlus("\\{.*}", matchedString));
         }
@@ -194,16 +206,33 @@ public class ExcelToJSONUtil {
 
     /**
      * 获取匹配字符串的剩余字符串
-     * */
-    public static String getRegexStrPlus(String regex, String text){
+     */
+    public static String getRegexStrPlus(String regex, String text) {
+        String result = "";
         Pattern pattern3 = Pattern.compile(regex);
         Matcher matcher3 = pattern3.matcher(text);
+        int lastMatchEnd = 0;
+        String matchedString = "";
+        String nonMatchedString = "";
         if (matcher3.find()) {
-            String matchStr = matcher3.group();
-            return text.replace(matchStr, "");
-        }else{
-            return text;
+            matchedString = matcher3.group();
+            int matchStart = matcher3.start();
+            int matchEnd = matcher3.end();
+            nonMatchedString += text.substring(lastMatchEnd, matchStart);
+            lastMatchEnd = matchEnd;
+        } else {
+            nonMatchedString += text;
         }
+
+        // Print the final part of the input string that is not matched
+        String finalNonMatchedString = nonMatchedString;
+        if (finalNonMatchedString.equals("")) {
+            result  = "_item";
+        } else {
+            result = finalNonMatchedString;
+        }
+
+        return result;
     }
 
 
@@ -213,11 +242,11 @@ public class ExcelToJSONUtil {
     public class Custom {
         /**
          * id
-         * */
+         */
         private String id = "";
         /**
          * pid
-         * */
+         */
         private String pid = "";
         /**
          * sheet名

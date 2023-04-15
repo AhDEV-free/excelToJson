@@ -24,7 +24,6 @@ class ExcelToJsonApplicationTests {
         try {
             InputStream resourceAsStream = null;
              resourceAsStream = this.getClass().getClassLoader().getResourceAsStream("excelToJSONTest.xlsx");
-//            resourceAsStream = new FileInputStream("/Users/yzh/home/skkj/dev/唐客中台/05数据采集/数据协议/承载网/cznet_table_data_模板.xlsx");
             // 本地文件
             // resourceAsStream = new FileInputStream("");
             JSONArray jsonArray = ExcelToJSONUtil.exportData(resourceAsStream);
