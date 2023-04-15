@@ -101,7 +101,7 @@ public class ExcelToJSONUtil {
                                         JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
                                         jsonArray.addAll(rowsA);
                                     } else {
-                                        jsonObject.put(toNameAs, rowsA);
+                                        jsonObject.put(pCustom.getName(), rowsA);
                                     }
                                 }
                             } else {
@@ -110,7 +110,7 @@ public class ExcelToJSONUtil {
                                     JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
                                     jsonArray.addAll(rowsA);
                                 } else {
-                                    jsonObject.put(toNameAs, rowsA);
+                                    jsonObject.put(pCustom.getName(), rowsA);
                                 }
                             }
                         }
