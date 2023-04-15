@@ -97,8 +97,8 @@ public class ExcelToJSONUtil {
                             if (pCustom.getToRow() != null && !pCustom.getToRow().equals("")) {
                                 if (pCustom.getToRow().equals(String.valueOf(i + 2 + 1))) {
                                     // 同名的添加
-                                    if (jsonObject.containsKey(toNameAs)) {
-                                        JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
+                                    if (jsonObject.containsKey(pCustom.getName())) {
+                                        JSONArray jsonArray = jsonObject.getJSONArray(pCustom.getName());
                                         jsonArray.addAll(rowsA);
                                     } else {
                                         jsonObject.put(pCustom.getName(), rowsA);
@@ -106,8 +106,8 @@ public class ExcelToJSONUtil {
                                 }
                             } else {
                                 // 同名的添加
-                                if (jsonObject.containsKey(toNameAs)) {
-                                    JSONArray jsonArray = jsonObject.getJSONArray(toNameAs);
+                                if (jsonObject.containsKey(pCustom.getName())) {
+                                    JSONArray jsonArray = jsonObject.getJSONArray(pCustom.getName());
                                     jsonArray.addAll(rowsA);
                                 } else {
                                     jsonObject.put(pCustom.getName(), rowsA);
